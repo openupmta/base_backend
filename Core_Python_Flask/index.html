@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="//cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js" integrity="sha256-yr4fRk/GU1ehYJPAs8P4JlTgu0Hdsp4ZKrx8bDEDC3I=" crossorigin="anonymous"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+    <title>Flask SocketIO</title>
+</head>
+<body>
+<script type="text/javascript">
+$(document).ready(function() {
+
+    var current_room = 'sd';
+	var socket = io.connect('http://127.0.0.1:5000');
+    <!--all event on this namespace will be connected and handled by  socket_message2-->
+	var socket_message2 = io('http://127.0.0.1:5000/message2');
+
+
+
+<!--Click button Connect will emit event login, join room and message-->
+	$('#connect').on('click', function() {
+	    socket.emit('login', $('#username').val());
+
+		socket.emit('message', $('#username').val()+' has connected');
+
+		socket.emit('join', {'username': $('#username').val(), 'room': current_room});
+	});
+
+
+<!--Click button Connect2 will emit event join2 and message in namespace socket_message2-->
+	$('#connect2').on('click', function() {
+
+        socket_message2.emit('join2', {'username': $('#username').val(), 'room': 'AI'});
+		socket_message2.emit('message', $('#username').val()+' has connected socket_message2');
+	});
+
+<!--Disconnect socket-->
+	$('#disconnect').on('click', function() {
+		socket.disconnect();
+		console.log('click on disconnect');
+	});
+
+
+
+<!--Listen event message from socket with default namespace-->
+	socket.on('message', function(msg) {
+		$("#connect_messages").append('<li>'+msg+'</li>');
+	});
+
+
+<!--Listen event msg_room from socket with default namespace-->
+	socket.on('msg_room', function(msg) {
+		$("#group_messages").append('<li>'+msg+'</li>');
+	});
+
+
+<!--Listen event msg_room from socket with namespace message2-->
+	socket_message2.on('msg_room', function(msg) {
+		$("#group_messages").append('<li>'+msg+'</li>');
+	});
+
+
+<!--socket_message2 Listen event message-->
+	socket_message2.on('message', function(msg) {
+		$("#connect_messages").append('<li>'+msg+'</li>');
+	});
+
+
+<!--Listen message private-->
+	socket.on('new_private_msg', function(msg) {
+		$("#private_messages").append('<li>'+msg+'</li>');
+	});
+
+<!--Listen message private-->
+	socket.on('new_group_msg', function(msg) {
+		$("#group_messages").append('<li>'+msg+'</li>');
+	});
+
+
+
+<!--Emit message private-->
+
+	$('#sendPrivate').on('click', function() {
+		socket.emit('chat_private', {'username': $('#receiver').val(), 'message': $('#private_message').val()});
+		$('#private_message').val('');
+	});
+
+
+<!--Emit message group-->
+
+	$('#sendGroup').on('click', function() {
+		socket.emit('chat_group', {'username': $('#username').val(), 'room': current_room, 'message': $('#group_message').val()});
+		$('#group_message').val('');
+	});
+
+
+
+
+<!--    Choose room-->
+
+	$('#sd').on('click', function() {
+		if(current_room == 'sd'){
+		    alert('You are already in this room!');
+		}
+		else{
+		    socket.emit('leave', {'username': $('#username').val(), 'room': current_room});
+		    current_room = 'sd';
+		    socket.emit('join', {'username': $('#username').val(), 'room': current_room});
+		}
+	});
+
+	$('#test').on('click', function() {
+		if(current_room == 'test'){
+		    alert('You are already in this room!');
+		}
+		else{
+		    socket.emit('leave', {'username': $('#username').val(), 'room': current_room});
+		    current_room = 'test';
+		    socket.emit('join', {'username': $('#username').val(), 'room': current_room});
+		}
+	});
+
+	$('#ai').on('click', function() {
+		if(current_room == 'ai'){
+		    alert('You are already in this room!');
+		}
+		else{
+		    socket.emit('leave', {'username': $('#username').val(), 'room': current_room});
+		    current_room = 'ai';
+		    socket.emit('join', {'username': $('#username').val(), 'room': current_room});
+		}
+	});
+
+
+});
+</script>
+
+
+Username:
+<input type="text" id="username">
+<button id="connect">Connect</button>
+<button id="connect2">Connect2</button>
+
+<br/>
+<br/>
+
+<ul id="connect_messages"></ul>
+
+
+<h2>Private Chat</h2>
+<ul id="private_messages"></ul>
+Receiver:
+<input type="text" id="receiver">
+<input type="text" id="private_message">
+<button id="sendPrivate">Send</button>
+
+<br/>
+<br/>
+
+<h2>Group Chat</h2>
+<button id="sd">SD</button>&nbsp;
+<button id="test">TEST</button>&nbsp;
+<button id="ai">AI</button>
+<br/>
+<br/>
+<ul id="group_messages"></ul>
+<input type="text" id="group_message">
+<button id="sendGroup">Send</button>
+<br/>
+<br/>
+<br/>
+<br/>
+
+<button id="disconnect">Disconnect</button>
+
+</body>
+</html>
